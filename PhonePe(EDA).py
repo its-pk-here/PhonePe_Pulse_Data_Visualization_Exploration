@@ -12,7 +12,7 @@ from PIL import Image as PILImage
 
 #---------------------------------------------------PSYCOPG CONNECTION---------------------------------------------------------------------
 
-projectB = psycopg2.connect(host='host',user='userId',password='password',database='DataBaseName')
+projectB = psycopg2.connect(host='<host>',user='<username>',password='<password>',database='<database>')
 cursor = projectB.cursor()
 
 cursor.execute('''select * from aggregate_transaction;''')
@@ -47,7 +47,7 @@ top_user = pd.DataFrame(t6, columns=['State', 'Year', 'Quarter', 'PinCode', 'Reg
 
 #---------------------------------------------------Exploration-----------------------------------------------------------------------------
 
-# OVERALL MAP
+# OVERALL MAP - AMOUNT
 
 def map_amount_overall():
     a_t2 = agg_trans[['State','Transaction_Amount']]
@@ -59,23 +59,22 @@ def map_amount_overall():
     state_names_tra.sort()
     df_state_names_tra = pd.DataFrame({'State':state_names_tra})
 
-    a_t2['State'] = a_t2['State'].str.replace('-',' ')
-    a_t2['State'] = a_t2['State'].str.replace('Dadra & Nagar Haveli & Daman & Diu','Dadra and Nagar Haveli and Daman and Diu')
-    a_t2['State'] = a_t2['State'].str.replace('Andaman & Nicobar Islands','Andaman & Nicobar')
+    a_t2['State'] = a_t2['State'].str.replace('andaman-&-nicobar-islands', 'Andaman & Nicobar')
+    a_t2['State'] = a_t2['State'].str.replace('---', ' & ')
+    a_t2['State'] = a_t2['State'].str.replace('-', ' ')
+    a_t2['State'] = a_t2['State'].str.replace('Dadra & Nagar Haveli & Daman & Diu', 'Dadra and Nagar Haveli and Daman and Diu')
     a_t2['State'] = a_t2['State'].str.title()
 
     merge_df = df_state_names_tra.merge(a_t2, on='State')
-    #merge_df.to_csv('State_trans.csv', index=False)
-    #df_trans = pd.read_csv('State_trans.csv')
 
     trans_fig = px.choropleth(merge_df, 
                 geojson = "https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
-                             featureidkey = 'properties.ST_NM', locations='State', color='Transaction_Amount', color_continuous_scale='Sunsetdark' , range_color=(0,200000000000))
+                             featureidkey = 'properties.ST_NM', locations='State', color='Transaction_Amount', color_continuous_scale='dense' , range_color=(0,150000000000))
     trans_fig.update_geos(fitbounds="locations", visible=False)
     #trans_fig.update_layout(title_font=dict(size=33),title_font_color='#6739b7')
     st.plotly_chart(trans_fig)
 
-# YEARLY MAP
+# YEARLY MAP - Amount
 
 def map_amount(yr, q):
     year = int(yr)
@@ -91,33 +90,91 @@ def map_amount(yr, q):
     state_names_tra.sort()
     df_state_names_tra = pd.DataFrame({'State':state_names_tra})
 
-    a_t2['State'] = a_t2['State'].str.replace('-',' ')
-    a_t2['State'] = a_t2['State'].str.replace('Dadra & Nagar Haveli & Daman & Diu','Dadra and Nagar Haveli and Daman and Diu')
-    a_t2['State'] = a_t2['State'].str.replace('Andaman & Nicobar Islands','Andaman & Nicobar')
+    a_t2['State'] = a_t2['State'].str.replace('andaman-&-nicobar-islands', 'Andaman & Nicobar')
+    a_t2['State'] = a_t2['State'].str.replace('---', ' & ')
+    a_t2['State'] = a_t2['State'].str.replace('-', ' ')
+    a_t2['State'] = a_t2['State'].str.replace('Dadra & Nagar Haveli & Daman & Diu', 'Dadra and Nagar Haveli and Daman and Diu')
     a_t2['State'] = a_t2['State'].str.title()
 
     merge_df = df_state_names_tra.merge(a_t2, on='State')
-    #merge_df.to_csv('State_trans.csv', index=False)
-    #df_trans = pd.read_csv('State_trans.csv')
 
     trans_fig = px.choropleth(merge_df, 
                 geojson = "https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
-                             featureidkey = 'properties.ST_NM', locations='State', color='Transaction_Amount', color_continuous_scale='BuPu', range_color=(0, 200000000000))
+                             featureidkey = 'properties.ST_NM', locations='State', color='Transaction_Amount', color_continuous_scale='deep', range_color=(0, 200000000000))
     trans_fig.update_geos(fitbounds="locations", visible=False)
     #trans_fig.update_layout(title_font=dict(size=33),title_font_color='#6739b7')
     st.plotly_chart(trans_fig)
 
-# OVERALL DATAFRAME
+# OVERALL MAP - COUNT
+
+def map_count_overall():
+    a_t2 = agg_trans[['State','Transaction_Count']]
+    a_t2 = a_t2.sort_values(by='State')
+    url = "https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson"
+    response = requests.get(url)
+    data1 = json.loads(response.content)
+    state_names_tra = [feature['properties']['ST_NM'] for feature in data1['features']]
+    state_names_tra.sort()
+    df_state_names_tra = pd.DataFrame({'State':state_names_tra})
+
+    a_t2['State'] = a_t2['State'].str.replace('andaman-&-nicobar-islands', 'Andaman & Nicobar')
+    a_t2['State'] = a_t2['State'].str.replace('---', ' & ')
+    a_t2['State'] = a_t2['State'].str.replace('-', ' ')
+    a_t2['State'] = a_t2['State'].str.replace('Dadra & Nagar Haveli & Daman & Diu', 'Dadra and Nagar Haveli and Daman and Diu')
+    a_t2['State'] = a_t2['State'].str.title()
+
+    merge_df = df_state_names_tra.merge(a_t2, on='State')
+
+    trans_fig = px.choropleth(merge_df, 
+                geojson = "https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
+                             featureidkey = 'properties.ST_NM', locations='State', color='Transaction_Count', color_continuous_scale='dense' , range_color=(0,80000000))
+    trans_fig.update_geos(fitbounds="locations", visible=False)
+    #trans_fig.update_layout(title_font=dict(size=33),title_font_color='#6739b7')
+    st.plotly_chart(trans_fig)
     
-def df_overall():
+# YEARLY MAP - COUNT
+
+def map_count(yr, q):
+    year = int(yr)
+    qr = int(q)
+    a_t = agg_trans[['State','Year','Quarter','Transaction_Count']]
+    a_t1 = a_t.loc[(a_t['Year']==year) & (a_t['Quarter']==qr)]
+    a_t2 = a_t1[['State','Transaction_Count']]
+    a_t2 = a_t2.sort_values(by='State')
+    url = "https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson"
+    response = requests.get(url)
+    data1 = json.loads(response.content)
+    state_names_tra = [feature['properties']['ST_NM'] for feature in data1['features']]
+    state_names_tra.sort()
+    df_state_names_tra = pd.DataFrame({'State':state_names_tra})
+
+    a_t2['State'] = a_t2['State'].str.replace('andaman-&-nicobar-islands', 'Andaman & Nicobar')
+    a_t2['State'] = a_t2['State'].str.replace('---', ' & ')
+    a_t2['State'] = a_t2['State'].str.replace('-', ' ')
+    a_t2['State'] = a_t2['State'].str.replace('Dadra & Nagar Haveli & Daman & Diu', 'Dadra and Nagar Haveli and Daman and Diu')
+    a_t2['State'] = a_t2['State'].str.title()
+    
+    merge_df = df_state_names_tra.merge(a_t2, on='State')
+
+    trans_fig = px.choropleth(merge_df, 
+                geojson = "https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
+                             featureidkey = 'properties.ST_NM', locations='State', color='Transaction_Count', color_continuous_scale='deep', range_color=(0, 200000000))
+    trans_fig.update_geos(fitbounds="locations", visible=False)
+    #trans_fig.update_layout(title_font=dict(size=33),title_font_color='#6739b7')
+    st.plotly_chart(trans_fig)    
+    
+    
+# OVERALL DATAFRAME - AMOUNT
+    
+def df_overall_amount():
     a_t = agg_trans[['Transaction_Type','Transaction_Amount']]
     transaction_type = a_t.groupby('Transaction_Type')['Transaction_Amount'].sum()
     df1 = pd.DataFrame(transaction_type).reset_index()
     return st.dataframe(df1)
 
-# YEARLY DATAFRAME
+# YEARLY DATAFRAME - AMOUNT
 
-def df(yr,q):
+def df_amount(yr,q):
     year = int(yr)
     qr = int(q)
     a_t = agg_trans[['Year','Quarter','Transaction_Type','Transaction_Amount']]
@@ -126,6 +183,46 @@ def df(yr,q):
     transaction_type = a_t2.groupby('Transaction_Type')['Transaction_Amount'].sum()
     df1 = pd.DataFrame(transaction_type).reset_index()
     return st.dataframe(df1)
+
+# OVERALL DATAFRAME - COUNT
+    
+def df_overall_count():
+    a_t = agg_trans[['Transaction_Type','Transaction_Count']]
+    transaction_type = a_t.groupby('Transaction_Type')['Transaction_Count'].sum()
+    df1 = pd.DataFrame(transaction_type).reset_index()
+    return st.dataframe(df1)
+
+# YEARLY DATAFRAME - COUNT
+
+def df_count(yr,q):
+    year = int(yr)
+    qr = int(q)
+    a_t = agg_trans[['Year','Quarter','Transaction_Type','Transaction_Count']]
+    a_t1 = a_t.loc[(a_t['Year']==year) & (a_t['Quarter']==qr)]
+    a_t2 = a_t1[['Transaction_Type','Transaction_Count']]
+    transaction_type = a_t2.groupby('Transaction_Type')['Transaction_Count'].sum()
+    df1 = pd.DataFrame(transaction_type).reset_index()
+    return st.dataframe(df1)
+
+# STATEWISE MOBILE BRAND
+
+def statewise_mb(State):
+    Agg_user = agg_user[['State','Mobile_Brand','Transaction_Count']]
+    Agg_user['State'] = Agg_user['State'].str.replace('Andaman & Nicobar Islands', 'Andaman & Nicobar')
+    Agg_user['State'] = Agg_user['State'].str.replace('---', ' & ')
+    Agg_user['State'] = Agg_user['State'].str.replace('-', ' ')
+    Agg_user['State'] = Agg_user['State'].str.replace('Dadra & Nagar Haveli & Daman & Diu', 'Dadra and Nagar Haveli and Daman and Diu')
+    Agg_user['State'] = Agg_user['State'].str.title()
+    
+    au2 = Agg_user.loc[(Agg_user['State'] == State)]
+    brand_transaction_counts = au2.groupby('Mobile_Brand')['Transaction_Count'].sum()
+    bt = pd.DataFrame(brand_transaction_counts).reset_index()
+    fig2 = px.bar(bt, y='Transaction_Count',
+                 x='Mobile_Brand',
+                 color_discrete_sequence = px.colors.sequential.Aggrnyl)
+    fig2.update_layout(width=1300, height=400)
+    st.plotly_chart(fig2)
+
 
 #-----------------------------------------------------------QUERIES-----------------------------------------------------------------------    
 
@@ -149,7 +246,7 @@ def two():
     ag1 = ag1.sort_values()
 
     agi = ag1.head(10)
-    fig = px.bar(agi, x=agi.index, y='Transaction_Amount', color_discrete_sequence = px.colors.sequential.Blues)
+    fig = px.bar(agi, x=agi.index, y='Transaction_Amount', color_discrete_sequence = px.colors.sequential.Agsunset)
     st.plotly_chart(fig)
 
 
@@ -161,7 +258,7 @@ def three():
     bt = pd.DataFrame(brand_transaction_counts).reset_index()
     fig2 = px.pie(bt, values='Transaction_Count',
                  names='Mobile_Brand',
-                 color_discrete_sequence=px.colors.sequential.RdBu)
+                 color_discrete_sequence = px.colors.qualitative.Antique)
     st.plotly_chart(fig2)
 
 
@@ -173,7 +270,7 @@ def four():
     ao = pd.DataFrame(apps_opened).reset_index()
     ao = ao.sort_values(by='Apps_Opened', ascending=False)  # Sort by 'Apps_Opened' column in descending order
     ao = ao.head(10)
-    fig = px.bar(ao,x='State',y='Apps_Opened', color_discrete_sequence=px.colors.sequential.YlGn)
+    fig = px.bar(ao,x='State',y='Apps_Opened', color_discrete_sequence=px.colors.sequential.ice)
     st.plotly_chart(fig)
 
 
@@ -185,7 +282,7 @@ def five():
     ru = pd.DataFrame(registered_user).reset_index()
     ru = ru.sort_values(by = 'Registered_Users', ascending=False)
     ru = ru.head(10)
-    fig1 = px.bar(ru,x='State',y='Registered_Users', color_discrete_sequence=px.colors.sequential.turbid)
+    fig1 = px.bar(ru,x='State',y='Registered_Users', color_discrete_sequence=px.colors.sequential.Viridis)
     st.plotly_chart(fig1)
 
 
@@ -197,7 +294,7 @@ def six():
     dt = pd.DataFrame(district_transaction).reset_index()
     dt = dt.sort_values(by = 'Transaction_Amount', ascending=False)
     dt = dt.head(10)
-    fig2 = px.bar(dt,x='District',y='Transaction_Amount', color_discrete_sequence=px.colors.sequential.dense)
+    fig2 = px.bar(dt,x='District',y='Transaction_Amount', color_discrete_sequence=px.colors.sequential.Jet)
     st.plotly_chart(fig2)
   
 
@@ -209,7 +306,7 @@ def seven():
     du = pd.DataFrame(district_users).reset_index()
     du = du.sort_values(by = 'Registered_Users', ascending = False)
     du = du.head(10)
-    fig3 = px.bar(du,x='District',y='Registered_Users', color_discrete_sequence=px.colors.sequential.matter)
+    fig3 = px.bar(du,x='District',y='Registered_Users', color_discrete_sequence=px.colors.sequential.Cividis)
     st.plotly_chart(fig3)
 
 
@@ -232,21 +329,26 @@ def nine():
     aod1 = pd.DataFrame(least_apps_opened_district).reset_index()
     aod1 = aod1.sort_values(by='Apps_Opened')  # Sort by 'Apps_Opened' column in descending order
     aod1 = aod1.head(10)
-    fig9 = px.bar(aod1,x='District',y='Apps_Opened', color_discrete_sequence=px.colors.sequential.Agsunset)
+    fig9 = px.bar(aod1,x='District',y='Apps_Opened', color_discrete_sequence=px.colors.sequential.Bluered)
     st.plotly_chart(fig9)
     
 #-----------------------------------------------------------STREAMLIT----------------------------------------------------------------------
 
 st.set_page_config(layout="wide") #Wide screen
 
+st.title("PHONE PE PULSE DATA VISUALIZATION AND EXPLORATION")
+                                        
+tab1, tab2, tab3 = st.tabs(['HOME', 'EXPLORE','ANALYSIS'])
 
-def page1():
-    st.title("PHONE PE PULSE DATA VISUALIZATION AND EXPLORATION")
+with tab1:
     col1,col2 = st.columns(2)
     with col1:
         image_path = r"C:\Users\pavan\Downloads\phone-pe.png"
         col1.image(PILImage.open(image_path), width=500)
         st.write("PhonePe is a leading digital payments and financial technology platform that has revolutionized the way people in India manage their finances and make transactions. Launched in 2015, PhonePe quickly gained popularity as a user-friendly and secure mobile app that enables seamless digital transactions.")
+        
+        st.write("APP DOWNLOAD LINK - https://www.phonepe.com/app-download/")
+        
     with col2:
         st.caption("KEY FEATURES AND SERVICES OF PHONE PE :")
         st.write("1. MONEY TRANSFER : PhonePe allows users to send and receive money instantly from their bank accounts. Users can also request money from friends and family.")
@@ -258,7 +360,7 @@ def page1():
 
 
 
-def page2():
+with tab2:
     
     col1,col2 = st.columns(2)
     with col1:
@@ -272,18 +374,33 @@ def page2():
     with col1:
         st.caption('TRANSACTION TYPE VS TRANSACTION AMOUNT')
         if tr_year == 'Overall':
-            df_overall()
-        else:
-            df(tr_year , tr_quarter)
-        
-    with col2:
-        st.caption('TRANSACTION AMOUNT')
-        if tr_year == 'Overall':
+            df_overall_amount()
             map_amount_overall()
         else:
+            df_amount(tr_year , tr_quarter)
             map_amount(tr_year , tr_quarter)
             
-def page3():
+    with col2:
+        st.caption('TRANSACTION TYPE VS TRANSACTION COUNT')
+        if tr_year == 'Overall':
+            df_overall_count()
+            map_count_overall()
+        else:
+            df_count(tr_year, tr_quarter)
+            map_count(tr_year, tr_quarter)
+
+    state=st.selectbox('**Select State**',('Andaman & Nicobar Islands','Andhra Pradesh', 'Arunachal Pradesh',
+       'Assam', 'Bihar', 'Chandigarh', 'Chhattisgarh',
+       'Dadra & Nagar Haveli & Daman & Diu', 'Delhi', 'Goa', 'Gujarat',
+       'Haryana', 'Himachal Pradesh', 'Jammu & Kashmir', 'Jharkhand',
+       'Karnataka', 'Kerala', 'Ladakh', 'Lakshadweep', 'Madhya Pradesh',
+       'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland',
+       'Odisha', 'Puducherry', 'Punjab', 'Rajasthan', 'Sikkim',
+       'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh',
+       'Uttarakhand', 'West Bengal'))
+    statewise_mb(state)
+                
+with tab3:
     query = st.selectbox("Select Table",('None','Top 10 Transactions', 'Least 10 Transactions',
          'Mobile Brand vs Transaction Count', 'Top 10 Apps Opened States', 'Top 10 Registered Users' ,'Top 10 District Transaction', 
          'District vs Registered Users', 'Top 10 Apps Opened Districts', 'Least 10 Apps Opened Districts'))
@@ -310,15 +427,6 @@ def page3():
         eight()
     elif query=='Least 10 Apps Opened Districts':
         nine()
-                                    
-selected_page = st.sidebar.radio('VISIT:', ['Home', 'Explore','Analysis'])
-if selected_page == 'Home':
-    page1()
-elif selected_page == 'Explore':
-    page2()
-elif selected_page == 'Analysis':
-    page3()
-
 #--------------------------------------------------------------THE END---------------------------------------------------------------------  
 
 
